@@ -1,4 +1,4 @@
-package io.tiago.monitor.monitor;
+package io.tiago.monitor;
 
 import java.util.ArrayList;
 import java.util.List;
