@@ -6,6 +6,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -34,6 +36,10 @@ public class Server extends AbstractVerticle {
 
     private static final String BODY_NOT_EMPTY = "Body must be not empty";
 
+    private static final String TOO_MANY_NODES = "Cannot add more nodes to the queue";
+
+    private static final int MAX_ALLOWED_NODES = 3;
+
     public static void main(String[] args) {
         Vertx vertx = Vertx.vertx();
         vertx.deployVerticle(new Server());
@@ -50,12 +56,17 @@ public class Server extends AbstractVerticle {
         HTTPRequestValidationHandler validationHandler = HTTPRequestValidationHandler.create();
 
         router.get("/").handler(this::getAll);
-        //router.get("/:id").handler(this::getOne);
         router.post("/").handler(this::addOne).handler(validationHandler);
-        //router.put("/:id").handler(this::edit);
-        router.delete("/:id").handler(this::deleteOne);
 
-        vertx.createHttpServer().requestHandler(router).listen(APP_PORT);
+        HttpServer server = vertx.createHttpServer();
+
+        server.websocketHandler(event -> {
+            LOGGER.info("Web socket client connected");
+            event.writeBinaryMessage(Buffer.buffer("Hello user"));
+            //event.handler(data -> System.out.println("Received data " + data.toString("ISO-8859-1")));
+        });
+
+        server.requestHandler(router).listen(APP_PORT);
     }
 
     private void getAll(RoutingContext routingContext) {
@@ -78,7 +89,8 @@ public class Server extends AbstractVerticle {
             ObjectMapper mapper = new ObjectMapper();
             mapper.registerModule(new ParameterNamesModule()).registerModule(new Jdk8Module()).registerModule(new JavaTimeModule());
             node = mapper.readValue(body, Node.class);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
             routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_TYPE).setStatusCode(400).end(MSG_BAD_REQUEST);
             return;
@@ -89,20 +101,29 @@ public class Server extends AbstractVerticle {
         if (validations.size() == 0) {
 
             try {
+
                 LOGGER.info(String.format("Adding node %s", node));
-                Monitor monitor = new Monitor(node);
-                Thread t = new Thread(monitor);
-                t.start();
-                routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_TYPE).setStatusCode(201).end(MSG_OK);
-            } catch (Exception e) {
+
+                NodeQueue nodeQueue = NodeQueue.instance();
+
+                if (nodeQueue.size() < MAX_ALLOWED_NODES) {
+
+                    NodeQueue.instance().add(node);
+                    Monitor monitor = new Monitor(node);
+                    Thread t = new Thread(monitor);
+                    t.start();
+                    routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_TYPE).setStatusCode(201).end(MSG_OK);
+                }
+                else {
+                    routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_TYPE).setStatusCode(400).end(TOO_MANY_NODES);
+                }
+            }
+            catch (Exception e) {
                 routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_TYPE).setStatusCode(400).end(e.getMessage());
             }
-
-        } else {
+        }
+        else {
             routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_TYPE).setStatusCode(400).end(Json.encodePrettily(validations));
         }
-    }
-
-    private void deleteOne(RoutingContext routingContext) {
     }
 }
