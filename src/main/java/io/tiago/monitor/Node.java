@@ -20,6 +20,18 @@ public class Node implements Serializable {
 
     private boolean up;
 
+    public Node() {
+    }
+
+    public Node(int pollFrequency, LocalTime start, LocalTime end, long expire, String host, int port) {
+        this.pollFrequency = pollFrequency;
+        this.start = start;
+        this.end = end;
+        this.expire = expire;
+        this.host = host;
+        this.port = port;
+    }
+
     public int getPollFrequency() {
         return pollFrequency;
     }

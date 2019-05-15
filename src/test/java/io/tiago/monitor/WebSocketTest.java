@@ -1,42 +1,107 @@
 package io.tiago.monitor;
 
-import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.json.JsonObject;
+import io.vertx.core.json.Json;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
-import java.io.IOException;
-import java.net.ServerSocket;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
-// TODO Implement unit tests
-@RunWith(JUnit4.class)
+@RunWith(VertxUnitRunner.class)
 public class WebSocketTest {
 
     @Before
-    public void setUp(TestContext context) throws IOException {
+    public void setUp() {
         Vertx vertx = Vertx.vertx();
-        ServerSocket socket = new ServerSocket(0);
-        int port = socket.getLocalPort();
-        socket.close();
-        DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("http.port", port));
-        vertx.deployVerticle(WebSocketTest.class.getName(), options, context.asyncAssertSuccess());
+        vertx.deployVerticle(new Server());
     }
 
     @Test
-    public void client() {
-        HttpClient client = Vertx.vertx().createHttpClient();
-        client.websocket(8001, "localhost", "/", socket -> {
-            socket.handler(data -> {
-                System.out.println("Server message: ");
-                System.out.println("Received data " + data.toString("ISO-8859-1"));
-            });
-            socket.writeBinaryMessage(Buffer.buffer("Hello server"));
-        });
+    public void when_valid_request_then_web_socket_ok(TestContext context) {
+
+        LocalTime start = LocalTime.now().plus(Duration.ofSeconds(30));
+        LocalTime end = LocalTime.now().plus(Duration.ofMinutes(1));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+        String s = start.format(formatter);
+        String e = end.format(formatter);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("pollFrequency", 2);
+        body.put("start", s);
+        body.put("end", e);
+        body.put("expire", 30);
+        body.put("host", "localhost");
+        body.put("port", 8001);
+
+        final String json = Json.encodePrettily(body);
+        final String length = Integer.toString(json.length());
+
+        Async async = context.async();
+        Vertx vertx = Vertx.vertx();
+        vertx.createHttpClient().post(8001, "localhost", "/")
+                .putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE)
+                .putHeader("content-length", length)
+                .handler(response -> {
+
+                    context.assertEquals(response.statusCode(), 201);
+                    context.assertTrue(response.headers().get("content-type").contains("application/json"));
+
+                    response.bodyHandler(resp -> {
+
+                        final Message message = Json.decodeValue(resp.toString(), Message.class);
+                        context.assertEquals(message.getMessage(), Constants.MSG_OK);
+
+                        HttpClient client = Vertx.vertx().createHttpClient();
+                        client.websocket(8001, "localhost", "/", socket -> socket.handler(data -> {
+                            context.assertNotNull(data.toString());
+                            async.complete();
+                        }));
+                    });
+                })
+                .write(json)
+                .end();
     }
+
+    @Test
+    public void when_given_valid_data_then_ok(TestContext context) {
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("pollFrequency", 2);
+        body.put("start", "21:00:00");
+        body.put("end", "21:02:00");
+        body.put("expire", 30);
+        body.put("host", "localhost");
+        body.put("port", 8001);
+
+        final String json = Json.encodePrettily(body);
+        final String length = Integer.toString(json.length());
+
+        Async async = context.async();
+        Vertx vertx = Vertx.vertx();
+        vertx.createHttpClient().post(8001, "localhost", "/")
+                .putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE)
+                .putHeader("content-length", length)
+                .handler(response -> {
+                    context.assertEquals(response.statusCode(), 201);
+                    context.assertTrue(response.headers().get("content-type").contains("application/json"));
+                    response.bodyHandler(resp -> {
+                        final Message message = Json.decodeValue(resp.toString(), Message.class);
+                        context.assertEquals(message.getMessage(), Constants.MSG_OK);
+                        async.complete();
+                    });
+                })
+                .write(json)
+                .end();
+    }
+
+    // TODO Cont. implementing
 }
