@@ -17,7 +17,9 @@ import io.vertx.ext.web.handler.StaticHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Time;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 
 public class Server extends AbstractVerticle {
@@ -60,9 +62,28 @@ public class Server extends AbstractVerticle {
 
         HttpServer server = vertx.createHttpServer();
 
-        server.websocketHandler(event -> {
+        server.websocketHandler(handler -> {
+            // TODO Apply refactor: move to a class
             LOGGER.info("Web socket client connected");
-            event.writeBinaryMessage(Buffer.buffer("Hello user"));
+            MemoryDb db = MemoryDb.instance();
+            Runnable task = () -> {
+
+                while(true) {
+                    Map<String, Node> data = db.all();
+                    data.forEach((k, v) -> {
+                        LOGGER.info(String.format("Sending event %s", k));
+                        handler.writeBinaryMessage(Buffer.buffer(k));
+                    });
+                    try {
+                        TimeUnit.SECONDS.sleep(3);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            Thread t = new Thread(task);
+            t.setDaemon(true);
+            t.start();
             //event.handler(data -> System.out.println("Received data " + data.toString("ISO-8859-1")));
         });
 
@@ -111,7 +132,9 @@ public class Server extends AbstractVerticle {
                     NodeQueue.instance().add(node);
                     Monitor monitor = new Monitor(node);
                     Thread t = new Thread(monitor);
+                    t.setDaemon(true);
                     t.start();
+
                     routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_TYPE).setStatusCode(201).end(MSG_OK);
                 }
                 else {

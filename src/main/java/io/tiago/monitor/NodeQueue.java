@@ -3,16 +3,14 @@ package io.tiago.monitor;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Singleton pattern to control how many node could be added to be monitored
- */
 public class NodeQueue {
 
-    private static NodeQueue nodeQueue;
+    private static volatile NodeQueue nodeQueue;
 
-    private List<Integer> nodes = new ArrayList<>();
+    private List<Integer> nodes;
 
     private NodeQueue() {
+        this.nodes = new ArrayList<>();
     }
 
     public static NodeQueue instance() {
@@ -25,7 +23,10 @@ public class NodeQueue {
     }
 
     public void add(Node node) {
-        nodes.add(node.getPort());
+
+        synchronized (nodes) {
+            this.nodes.add(node.getPort());
+        }
     }
 
     public int size() {

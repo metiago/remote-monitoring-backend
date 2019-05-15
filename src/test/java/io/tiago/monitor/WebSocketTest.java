@@ -14,7 +14,7 @@ import org.junit.runners.JUnit4;
 import java.io.IOException;
 import java.net.ServerSocket;
 
-// TODO Implement it
+// TODO Implement unit tests
 @RunWith(JUnit4.class)
 public class WebSocketTest {
 
