@@ -13,14 +13,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>        
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-
-        <vertx.version>3.6.3</vertx.version>
-        <vertx.verticle>io.tiago.player.verticle.MonitorX</vertx.verticle>
-
+        <vertx.version>3.7.0</vertx.version>
+        <vertx.verticle>io.tiago.monitor.Server</vertx.verticle>
         <fabric8-vertx-maven-plugin.version>1.0.5</fabric8-vertx-maven-plugin.version>
         <slf4j.version>1.7.21</slf4j.version>
         <log4j2.version>2.5</log4j2.version>
     </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -32,6 +31,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>io.vertx</groupId>
@@ -44,6 +44,11 @@
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web-api-contract</artifactId>
+            <version>3.5.4</version>
         </dependency>
         <dependency>
 			<groupId>io.vertx</groupId>
@@ -90,6 +95,21 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>${log4j2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-parameter-names</artifactId>
+            <version>2.9.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+            <version>2.9.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.9.8</version>
         </dependency>
     </dependencies>
     <build>

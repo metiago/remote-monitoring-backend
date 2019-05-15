@@ -12,6 +12,7 @@
 /target/
 bin/
 tmp/
+*.log
 *.tmp
 *.bak
 *.swp
