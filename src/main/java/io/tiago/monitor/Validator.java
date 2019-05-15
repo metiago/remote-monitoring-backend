@@ -13,6 +13,10 @@ public class Validator {
             validations.put("poll_frequency", "Poll frequency must be not empty or equal to zero");
         }
 
+        if(node.getExpire() == 0) {
+            validations.put("poll_frequency", "expire time must be not empty or equal to zero");
+        }
+
         if (node.getStart() == null || node.getEnd() == null) {
             validations.put("start", "Start time must be not empty");
         }
