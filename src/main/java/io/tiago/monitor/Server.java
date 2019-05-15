@@ -90,8 +90,9 @@ public class Server extends AbstractVerticle {
 
             try {
                 LOGGER.info(String.format("Adding node %s", node));
-                Monitor monitor = new Monitor();
-                monitor.check(node);
+                Monitor monitor = new Monitor(node);
+                Thread t = new Thread(monitor);
+                t.start();
                 routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_TYPE).setStatusCode(201).end(MSG_OK);
             } catch (Exception e) {
                 routingContext.response().putHeader(CONTENT_TYPE, APPLICATION_TYPE).setStatusCode(400).end(e.getMessage());
