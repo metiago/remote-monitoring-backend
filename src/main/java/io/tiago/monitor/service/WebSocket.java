@@ -6,7 +6,7 @@ import io.vertx.core.http.ServerWebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class WebSocket implements Runnable {
@@ -26,11 +26,11 @@ public class WebSocket implements Runnable {
 
         while (true) {
 
-            Map<String, Node> data = db.all();
+            List<Node> data = db.all();
 
-            data.forEach((k, v) -> {
-                LOGGER.info(String.format("Sending event %s", k));
-                this.handler.writeBinaryMessage(Buffer.buffer(k));
+            data.forEach(node -> {
+                LOGGER.info(String.format("Sending status for this: %s", node));
+                this.handler.writeBinaryMessage(Buffer.buffer(Boolean.toString(node.isUp())));
             });
 
             try {

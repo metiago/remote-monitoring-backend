@@ -63,7 +63,7 @@ public class Monitor implements Runnable {
 
         while (isTimeScheduled(this.node)) {
 
-            LOGGER.debug(String.format("Waiting to check address %s:%s", this.node.getHost(), this.node.getPort()));
+            LOGGER.debug(String.format("Waiting to check node: %s", this.node));
 
             try {
                 TimeUnit.SECONDS.sleep(MAX_INTERVAL_TIME_IN_SEC);

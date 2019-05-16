@@ -7,23 +7,28 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.tiago.monitor.domain.Constants;
 import io.tiago.monitor.domain.Message;
 import io.tiago.monitor.domain.Node;
+import io.tiago.monitor.service.MemoryDB;
 import io.tiago.monitor.service.Monitor;
 import io.tiago.monitor.service.NodeQueue;
 import io.tiago.monitor.service.WebSocket;
 import io.tiago.monitor.validator.Validator;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.api.validation.HTTPRequestValidationHandler;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 public class Server extends AbstractVerticle {
@@ -40,18 +45,26 @@ public class Server extends AbstractVerticle {
     @Override
     public void start() {
 
-        vertx.eventBus().consumer("event", message -> {
-            message.reply("Hey Ziggy!");
-        });
-
         Router router = Router.router(vertx);
         router.route("/assets/*").handler(StaticHandler.create("assets"));
         router.route().handler(BodyHandler.create());
 
-        HTTPRequestValidationHandler validationHandler = HTTPRequestValidationHandler.create();
+        Set<String> allowedHeaders = new HashSet<>();
+        allowedHeaders.add("x-requested-with");
+        allowedHeaders.add("Access-Control-Allow-Origin");
+        allowedHeaders.add("origin");
+        allowedHeaders.add("Content-Type");
+        allowedHeaders.add("accept");
+
+        Set<HttpMethod> allowedMethods = new HashSet<>();
+        allowedMethods.add(HttpMethod.GET);
+        allowedMethods.add(HttpMethod.POST);
+        allowedMethods.add(HttpMethod.OPTIONS);
+
+        router.route().handler(CorsHandler.create("*").allowedHeaders(allowedHeaders).allowedMethods(allowedMethods));
 
         router.get("/").handler(this::getAll);
-        router.post("/").handler(this::addOne).handler(validationHandler);
+        router.post("/").handler(this::addOne);
 
         HttpServer server = vertx.createHttpServer();
 
@@ -68,10 +81,16 @@ public class Server extends AbstractVerticle {
 
     private void getAll(RoutingContext routingContext) {
         LOGGER.info("Listing all registered services");
-        routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(Json.encodePrettily(new Message(Constants.MSG_OK)));
+        MemoryDB db = MemoryDB.instance();
+        List<Node> res = db.all();
+        routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(Json.encodePrettily(res));
     }
 
     private void addOne(RoutingContext routingContext) {
+
+        if (routingContext.request().method() == HttpMethod.OPTIONS) {
+            return;
+        }
 
         String body = routingContext.getBodyAsString();
 

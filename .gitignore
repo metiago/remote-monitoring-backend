@@ -4,6 +4,7 @@
 ### Vert.x ###
 .vertx/
 .idea
+/log/
 
 ### Eclipse ###
 

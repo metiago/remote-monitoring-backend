@@ -2,18 +2,17 @@ package io.tiago.monitor.service;
 
 import io.tiago.monitor.domain.Node;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.LinkedList;
+import java.util.List;
 
 public class MemoryDB {
 
     private static volatile MemoryDB memoryDb;
 
-    private Map<String, Node> data;
+    private List<Node> data;
 
     private MemoryDB() {
-        data = new LinkedHashMap<>();
+        data = new LinkedList<>();
     }
 
     public static MemoryDB instance() {
@@ -28,19 +27,19 @@ public class MemoryDB {
     public void add(Node node) {
 
         synchronized (data) {
-            String key = UUID.randomUUID().toString().replace("-", "");
-            data.put(key, node);
+            data.add(node);
         }
     }
 
     public void remove(String key) {
 
         synchronized (data) {
-            data.remove(key);
+
+            // TODO Implement iterator removal
         }
     }
 
-    public Map<String, Node> all() {
+    public List<Node> all() {
         return data;
     }
 
