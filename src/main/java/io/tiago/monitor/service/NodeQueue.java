@@ -1,4 +1,6 @@
-package io.tiago.monitor;
+package io.tiago.monitor.service;
+
+import io.tiago.monitor.domain.Node;
 
 import java.util.ArrayList;
 import java.util.List;

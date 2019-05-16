@@ -1,23 +1,25 @@
-package io.tiago.monitor;
+package io.tiago.monitor.service;
+
+import io.tiago.monitor.domain.Node;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class MemoryDb {
+public class MemoryDB {
 
-    private static volatile MemoryDb memoryDb;
+    private static volatile MemoryDB memoryDb;
 
     private Map<String, Node> data;
 
-    private MemoryDb() {
+    private MemoryDB() {
         data = new LinkedHashMap<>();
     }
 
-    public static MemoryDb instance() {
+    public static MemoryDB instance() {
 
         if (memoryDb == null) {
-            memoryDb = new MemoryDb();
+            memoryDb = new MemoryDB();
         }
 
         return memoryDb;

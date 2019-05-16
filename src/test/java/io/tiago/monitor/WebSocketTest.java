@@ -1,5 +1,7 @@
 package io.tiago.monitor;
 
+import io.tiago.monitor.domain.Constants;
+import io.tiago.monitor.domain.Message;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.Json;
@@ -28,7 +30,7 @@ public class WebSocketTest {
     @Test
     public void when_valid_request_then_web_socket_ok(TestContext context) {
 
-        LocalTime start = LocalTime.now().plus(Duration.ofSeconds(30));
+        LocalTime start = LocalTime.now().plus(Duration.ofSeconds(10));
         LocalTime end = LocalTime.now().plus(Duration.ofMinutes(1));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
         String s = start.format(formatter);
@@ -103,5 +105,35 @@ public class WebSocketTest {
                 .end();
     }
 
-    // TODO Cont. implementing
+    @Test
+    public void when_given_invalid_data_then_error(TestContext context) {
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("pollFrequency", null);
+        body.put("start", "");
+        body.put("end", "");
+        body.put("expire", null);
+        body.put("host", "");
+        body.put("port", "port");
+
+        final String json = Json.encodePrettily(body);
+        final String length = Integer.toString(json.length());
+
+        Async async = context.async();
+        Vertx vertx = Vertx.vertx();
+        vertx.createHttpClient().post(8001, "localhost", "/")
+                .putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE)
+                .putHeader("content-length", length)
+                .handler(response -> {
+                    context.assertEquals(response.statusCode(), 400);
+                    context.assertTrue(response.headers().get("content-type").contains("application/json"));
+                    response.bodyHandler(resp -> {
+                        final Message message = Json.decodeValue(resp.toString(), Message.class);
+                        context.assertEquals(message.getMessage(), Constants.MSG_BAD_REQUEST);
+                        async.complete();
+                    });
+                })
+                .write(json)
+                .end();
+    }
 }

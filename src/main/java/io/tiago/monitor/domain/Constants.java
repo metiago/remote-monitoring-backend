@@ -1,4 +1,4 @@
-package io.tiago.monitor;
+package io.tiago.monitor.domain;
 
 public class Constants {
 

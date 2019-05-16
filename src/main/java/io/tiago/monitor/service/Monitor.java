@@ -1,5 +1,6 @@
-package io.tiago.monitor;
+package io.tiago.monitor.service;
 
+import io.tiago.monitor.domain.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +86,7 @@ public class Monitor implements Runnable {
 
     private void save(Node node) {
         LOGGER.debug(String.format("Saving node %s", this.node));
-        MemoryDb db = MemoryDb.instance();
+        MemoryDB db = MemoryDB.instance();
         db.add(node);
     }
 }

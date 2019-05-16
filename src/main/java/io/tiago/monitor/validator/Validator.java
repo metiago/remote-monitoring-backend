@@ -1,4 +1,6 @@
-package io.tiago.monitor;
+package io.tiago.monitor.validator;
+
+import io.tiago.monitor.domain.Node;
 
 import java.util.HashMap;
 import java.util.Map;

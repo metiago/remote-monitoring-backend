@@ -4,6 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
+import io.tiago.monitor.domain.Constants;
+import io.tiago.monitor.domain.Message;
+import io.tiago.monitor.domain.Node;
+import io.tiago.monitor.service.MemoryDB;
+import io.tiago.monitor.service.Monitor;
+import io.tiago.monitor.service.NodeQueue;
+import io.tiago.monitor.service.WebSocket;
+import io.tiago.monitor.validator.Validator;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -46,25 +54,8 @@ public class Server extends AbstractVerticle {
         HttpServer server = vertx.createHttpServer();
 
         server.websocketHandler(handler -> {
-            // TODO Apply refactor: move to a class
-            LOGGER.info("Web socket client connected");
-            MemoryDb db = MemoryDb.instance();
-            Runnable task = () -> {
 
-                while (true) {
-                    Map<String, Node> data = db.all();
-                    data.forEach((k, v) -> {
-                        LOGGER.info(String.format("Sending event %s", k));
-                        handler.writeBinaryMessage(Buffer.buffer(k));
-                    });
-                    try {
-                        TimeUnit.SECONDS.sleep(3);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            };
-            Thread t = new Thread(task);
+            Thread t = new Thread(new WebSocket(handler));
             t.setDaemon(true);
             t.start();
             //event.handler(data -> System.out.println("Received data " + data.toString("ISO-8859-1")));
