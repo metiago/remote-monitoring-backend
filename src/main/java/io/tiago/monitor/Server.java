@@ -7,14 +7,12 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.tiago.monitor.domain.Constants;
 import io.tiago.monitor.domain.Message;
 import io.tiago.monitor.domain.Node;
-import io.tiago.monitor.service.MemoryDB;
 import io.tiago.monitor.service.Monitor;
 import io.tiago.monitor.service.NodeQueue;
 import io.tiago.monitor.service.WebSocket;
 import io.tiago.monitor.validator.Validator;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
@@ -26,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 
 public class Server extends AbstractVerticle {
@@ -39,8 +36,13 @@ public class Server extends AbstractVerticle {
         LOGGER.info("Monitor running listen on port:" + Constants.APP_PORT);
     }
 
+
     @Override
     public void start() {
+
+        vertx.eventBus().consumer("event", message -> {
+            message.reply("Hey Ziggy!");
+        });
 
         Router router = Router.router(vertx);
         router.route("/assets/*").handler(StaticHandler.create("assets"));
