@@ -1,15 +1,21 @@
 package io.tiago.monitor.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.io.Serializable;
 import java.time.LocalTime;
 import java.util.Objects;
 
 public class Node implements Serializable {
 
+    private String key;
+
     private int pollFrequency;
 
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime start;
 
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime end;
 
     private long expire;
@@ -23,13 +29,12 @@ public class Node implements Serializable {
     public Node() {
     }
 
-    public Node(int pollFrequency, LocalTime start, LocalTime end, long expire, String host, int port) {
-        this.pollFrequency = pollFrequency;
-        this.start = start;
-        this.end = end;
-        this.expire = expire;
-        this.host = host;
-        this.port = port;
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 
     public int getPollFrequency() {
