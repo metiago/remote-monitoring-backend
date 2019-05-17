@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.time.Duration;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
@@ -35,7 +36,7 @@ public class Monitor implements Runnable {
 
         while (isInTimeRange(node)) {
 
-            LOGGER.debug(String.format("Checking address %s:%s", this.node.getHost(), this.node.getPort()));
+            LOGGER.debug("Checking address {}:{}", this.node.getHost(), this.node.getPort());
 
             try (Socket socket = new Socket()) {
 
@@ -51,19 +52,18 @@ public class Monitor implements Runnable {
 
             LocalTime now = LocalTime.now();
             if(now.isAfter(expireAt)) {
-                LOGGER.debug(String.format("Time's up at %s", now));
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                LOGGER.debug("Ended at {} with node\n {}", formatter.format(now), node);
                 break;
             }
         }
-
-        save(node);
     }
 
     private void waitExecution() {
 
         while (isTimeScheduled(this.node)) {
 
-            LOGGER.debug(String.format("Waiting to check node: %s", this.node));
+            LOGGER.debug("Waiting to check node: {}", this.node);
 
             try {
                 TimeUnit.SECONDS.sleep(MAX_INTERVAL_TIME_IN_SEC);
@@ -82,11 +82,5 @@ public class Monitor implements Runnable {
     private boolean isInTimeRange(Node node) {
         LocalTime now = LocalTime.now();
         return now.isAfter(node.getStart()) && now.isBefore(node.getEnd());
-    }
-
-    private void save(Node node) {
-        LOGGER.debug(String.format("Saving node %s", this.node));
-        MemoryDB db = MemoryDB.instance();
-        db.add(node);
     }
 }

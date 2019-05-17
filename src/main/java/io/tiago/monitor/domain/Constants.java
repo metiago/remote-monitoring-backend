@@ -16,5 +16,7 @@ public class Constants {
 
     public static final String TOO_MANY_NODES = "Cannot add more nodes to the queue";
 
+    public static final String DATA_NOT_FOUND = "Data not found";
+
     public static final int MAX_ALLOWED_NODES = 10;
 }
