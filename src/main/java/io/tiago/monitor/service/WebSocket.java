@@ -29,7 +29,7 @@ public class WebSocket implements Runnable {
             List<Node> data = db.all();
 
             data.forEach(node -> {
-                LOGGER.info(String.format("Sending status for this: %s", node));
+                LOGGER.info("Sending status for: {}", node);
                 this.handler.writeBinaryMessage(Buffer.buffer(Boolean.toString(node.isUp())));
             });
 

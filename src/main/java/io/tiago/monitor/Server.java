@@ -7,6 +7,7 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.tiago.monitor.domain.Constants;
 import io.tiago.monitor.domain.Message;
 import io.tiago.monitor.domain.Node;
+import io.tiago.monitor.helper.JsonHelper;
 import io.tiago.monitor.service.MemoryDB;
 import io.tiago.monitor.service.Monitor;
 import io.tiago.monitor.service.NodeQueue;
@@ -16,7 +17,6 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
-import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -41,7 +41,6 @@ public class Server extends AbstractVerticle {
         LOGGER.info("Monitor running listen on port:" + Constants.APP_PORT);
     }
 
-
     @Override
     public void start() {
 
@@ -50,21 +49,22 @@ public class Server extends AbstractVerticle {
         router.route().handler(BodyHandler.create());
 
         Set<String> allowedHeaders = new HashSet<>();
-        allowedHeaders.add("x-requested-with");
         allowedHeaders.add("Access-Control-Allow-Origin");
-        allowedHeaders.add("origin");
         allowedHeaders.add("Content-Type");
         allowedHeaders.add("accept");
 
         Set<HttpMethod> allowedMethods = new HashSet<>();
         allowedMethods.add(HttpMethod.GET);
         allowedMethods.add(HttpMethod.POST);
+        allowedMethods.add(HttpMethod.DELETE);
         allowedMethods.add(HttpMethod.OPTIONS);
 
         router.route().handler(CorsHandler.create("*").allowedHeaders(allowedHeaders).allowedMethods(allowedMethods));
 
         router.get("/").handler(this::getAll);
-        router.post("/").handler(this::addOne);
+        router.get("/:key").handler(this::getOne);
+        router.post("/").handler(this::add);
+        router.delete("/:key").handler(this::delete);
 
         HttpServer server = vertx.createHttpServer();
 
@@ -83,19 +83,25 @@ public class Server extends AbstractVerticle {
         LOGGER.info("Listing all registered services");
         MemoryDB db = MemoryDB.instance();
         List<Node> res = db.all();
-        routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(Json.encodePrettily(res));
+        routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(JsonHelper.encodePrettily(res));
     }
 
-    private void addOne(RoutingContext routingContext) {
-
-        if (routingContext.request().method() == HttpMethod.OPTIONS) {
-            return;
+    private void getOne(RoutingContext routingContext) {
+        String key = routingContext.request().getParam("key");
+        LOGGER.info("Getting node by key {}", key);
+        Node node = MemoryDB.instance().one(key);
+        if (node == null) {
+            routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(404).end(JsonHelper.encodePrettily(new Message(Constants.DATA_NOT_FOUND)));
         }
+        routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(JsonHelper.encodePrettily(node));
+    }
+
+    private void add(RoutingContext routingContext) {
 
         String body = routingContext.getBodyAsString();
 
         if ("".equals(body)) {
-            routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(Json.encodePrettily(new Message(Constants.BODY_NOT_EMPTY)));
+            routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(new Message(Constants.BODY_NOT_EMPTY)));
             return;
         }
 
@@ -107,7 +113,7 @@ public class Server extends AbstractVerticle {
             node = mapper.readValue(body, Node.class);
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
-            routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(Json.encodePrettily(new Message(Constants.MSG_BAD_REQUEST)));
+            routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(new Message(Constants.MSG_BAD_REQUEST)));
             return;
         }
 
@@ -117,27 +123,40 @@ public class Server extends AbstractVerticle {
 
             try {
 
-                LOGGER.info(String.format("Adding node %s", node));
+                LOGGER.info("Adding node {}", node);
 
                 NodeQueue nodeQueue = NodeQueue.instance();
 
                 if (nodeQueue.size() < Constants.MAX_ALLOWED_NODES) {
 
                     NodeQueue.instance().add(node);
+                    MemoryDB.instance().add(node);
+
                     Monitor monitor = new Monitor(node);
                     Thread t = new Thread(monitor);
                     t.setDaemon(true);
                     t.start();
 
-                    routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(201).end(Json.encodePrettily(new Message(Constants.MSG_OK)));
+                    routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(201).end(JsonHelper.encodePrettily(new Message(Constants.MSG_OK)));
                 } else {
-                    routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(Json.encodePrettily(new Message(Constants.TOO_MANY_NODES)));
+                    routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(new Message(Constants.TOO_MANY_NODES)));
                 }
             } catch (Exception e) {
-                routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(Json.encodePrettily(new Message(e.getMessage())));
+                routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(new Message(e.getMessage())));
             }
         } else {
-            routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(Json.encodePrettily(validations));
+            routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(validations));
         }
+    }
+
+    private void delete(RoutingContext routingContext) {
+        String key = routingContext.request().getParam("key");
+        LOGGER.info("Deleting node by key {}", key);
+        Node node = MemoryDB.instance().one(key);
+        if (node == null) {
+            routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(404).end(JsonHelper.encodePrettily(new Message(Constants.DATA_NOT_FOUND)));
+        }
+        MemoryDB.instance().remove(key);
+        routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(204).end();
     }
 }
