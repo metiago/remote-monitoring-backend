@@ -2,8 +2,9 @@ package io.tiago.monitor.service;
 
 import io.tiago.monitor.domain.Node;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class MemoryDB {
 
@@ -12,7 +13,7 @@ public class MemoryDB {
     private List<Node> data;
 
     private MemoryDB() {
-        data = new LinkedList<>();
+        data = new ArrayList<>();
     }
 
     public static MemoryDB instance() {
@@ -27,6 +28,8 @@ public class MemoryDB {
     public void add(Node node) {
 
         synchronized (data) {
+            final String key = UUID.randomUUID().toString().replace("-", "");
+            node.setKey(key);
             data.add(node);
         }
     }
@@ -34,8 +37,7 @@ public class MemoryDB {
     public void remove(String key) {
 
         synchronized (data) {
-
-            // TODO Implement iterator removal
+            data.removeIf(v -> v.getKey().equals(key));
         }
     }
 
@@ -43,7 +45,15 @@ public class MemoryDB {
         return data;
     }
 
-    public int size() {
-        return this.data == null ? 0 : this.data.size();
+    public Node one(String key) {
+
+        for (Node n : data) {
+
+            if (n.getKey().equals(key)) {
+                return n;
+            }
+        }
+
+        return null;
     }
 }
