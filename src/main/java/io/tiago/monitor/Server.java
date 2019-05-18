@@ -73,7 +73,7 @@ public class Server extends AbstractVerticle {
             Thread t = new Thread(new WebSocket(handler));
             t.setDaemon(true);
             t.start();
-            //event.handler(data -> System.out.println("Received data " + data.toString("ISO-8859-1")));
+            //handler.handler(data -> System.out.println("Received data " + data.toString("ISO-8859-1")));
         });
 
         server.requestHandler(router).listen(Constants.APP_PORT);

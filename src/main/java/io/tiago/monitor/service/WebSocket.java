@@ -1,6 +1,7 @@
 package io.tiago.monitor.service;
 
 import io.tiago.monitor.domain.Node;
+import io.tiago.monitor.helper.JsonHelper;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.ServerWebSocket;
 import org.slf4j.Logger;
@@ -26,15 +27,17 @@ public class WebSocket implements Runnable {
 
         while (true) {
 
-            List<Node> data = db.all();
-
-            data.forEach(node -> {
-                LOGGER.info("Sending status for: {}", node);
-                this.handler.writeBinaryMessage(Buffer.buffer(Boolean.toString(node.isUp())));
-            });
-
             try {
-                TimeUnit.SECONDS.sleep(3);
+
+                List<Node> data = db.all();
+
+                for (Node n : data) {
+                    TimeUnit.SECONDS.sleep(10);
+                    LOGGER.info("Sending status for: {}", n);
+                    this.handler.write(Buffer.buffer(JsonHelper.encodePrettily(n)));
+                }
+
+                TimeUnit.SECONDS.sleep(2);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
