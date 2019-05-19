@@ -61,7 +61,7 @@ public class Monitor implements Runnable {
 
     private void waitExecution() {
 
-        while (isTimeScheduled(this.node)) {
+        while (!isInTimeRange(this.node)) {
 
             LOGGER.debug("Waiting to check node: {}", this.node);
 
@@ -71,11 +71,6 @@ public class Monitor implements Runnable {
                 LOGGER.error(e.getMessage(), e);
             }
         }
-    }
-
-    private boolean isTimeScheduled(Node node) {
-        LocalTime now = LocalTime.now();
-        return now.isBefore(node.getStart());
     }
 
     private boolean isInTimeRange(Node node) {
