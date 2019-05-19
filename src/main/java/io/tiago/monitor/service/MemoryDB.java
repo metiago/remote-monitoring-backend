@@ -53,4 +53,8 @@ public class MemoryDB {
 
         return null;
     }
+
+    public int size() {
+        return this.data.size();
+    }
 }

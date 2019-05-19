@@ -10,13 +10,14 @@ import io.tiago.monitor.domain.Node;
 import io.tiago.monitor.helper.JsonHelper;
 import io.tiago.monitor.service.MemoryDB;
 import io.tiago.monitor.service.Monitor;
-import io.tiago.monitor.service.NodeQueue;
 import io.tiago.monitor.service.WebSocket;
 import io.tiago.monitor.validator.Validator;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
+import io.vertx.core.json.Json;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -30,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
+// TODO check log for errors after long running
 public class Server extends AbstractVerticle {
 
     private static final transient Logger LOGGER = LoggerFactory.getLogger(Server.class);
@@ -63,6 +64,7 @@ public class Server extends AbstractVerticle {
 
         router.get("/").handler(this::getAll);
         router.get("/:key").handler(this::getOne);
+        router.get("/export").handler(this::export);
         router.post("/").handler(this::add);
         router.delete("/:key").handler(this::delete);
 
@@ -79,11 +81,23 @@ public class Server extends AbstractVerticle {
         server.requestHandler(router).listen(Constants.APP_PORT);
     }
 
+    // TODO change from constants to HttpHeaders
+    private void export(RoutingContext routingContext) {
+        LOGGER.info("Exporting nodes");
+        MemoryDB db = MemoryDB.instance();
+        List<Node> nodes = db.all();
+        routingContext.response()
+                .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
+                .putHeader("Content-Disposition", "attachment; filename=\"nodes.txt\"")
+                .putHeader(HttpHeaders.TRANSFER_ENCODING, "chunked")
+                .sendFile("J1.txt").end(Json.encodePrettily(nodes));
+    }
+
     private void getAll(RoutingContext routingContext) {
         LOGGER.info("Listing all registered services");
         MemoryDB db = MemoryDB.instance();
-        List<Node> res = db.all();
-        routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(JsonHelper.encodePrettily(res));
+        List<Node> nodes = db.all();
+        routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(JsonHelper.encodePrettily(nodes));
     }
 
     private void getOne(RoutingContext routingContext) {
@@ -108,6 +122,7 @@ public class Server extends AbstractVerticle {
         Node node;
 
         try {
+            // TODO Change it to helper
             ObjectMapper mapper = new ObjectMapper();
             mapper.registerModule(new ParameterNamesModule()).registerModule(new Jdk8Module()).registerModule(new JavaTimeModule());
             node = mapper.readValue(body, Node.class);
@@ -125,12 +140,11 @@ public class Server extends AbstractVerticle {
 
                 LOGGER.info("Adding node {}", node);
 
-                NodeQueue nodeQueue = NodeQueue.instance();
+                MemoryDB db = MemoryDB.instance();
 
-                if (nodeQueue.size() < Constants.MAX_ALLOWED_NODES) {
+                if (db.size() < Constants.MAX_ALLOWED_NODES) {
 
-                    NodeQueue.instance().add(node);
-                    MemoryDB.instance().add(node);
+                    db.add(node);
 
                     Monitor monitor = new Monitor(node);
                     Thread t = new Thread(monitor);
@@ -142,7 +156,8 @@ public class Server extends AbstractVerticle {
                     routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(new Message(Constants.TOO_MANY_NODES)));
                 }
             } catch (Exception e) {
-                routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(new Message(e.getMessage())));
+                LOGGER.error(e.getMessage(), e);
+                routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(500).end(JsonHelper.encodePrettily(new Message(e.getMessage())));
             }
         } else {
             routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(validations));

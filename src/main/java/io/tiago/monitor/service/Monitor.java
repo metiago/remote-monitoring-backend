@@ -45,13 +45,12 @@ public class Monitor implements Runnable {
                 SocketAddress socketAddress = new InetSocketAddress(this.node.getHost(), this.node.getPort());
                 socket.connect(socketAddress);
                 this.node.setUp(true);
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 node.setUp(false);
             }
 
             LocalTime now = LocalTime.now();
-            if(now.isAfter(expireAt)) {
+            if (now.isAfter(expireAt)) {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
                 LOGGER.debug("Ended at {} with node\n {}", formatter.format(now), node);
                 break;
@@ -67,8 +66,7 @@ public class Monitor implements Runnable {
 
             try {
                 TimeUnit.SECONDS.sleep(MAX_INTERVAL_TIME_IN_SEC);
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }

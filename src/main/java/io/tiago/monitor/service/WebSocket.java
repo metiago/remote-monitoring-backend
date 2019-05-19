@@ -39,7 +39,9 @@ public class WebSocket implements Runnable {
 
                 TimeUnit.SECONDS.sleep(2);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                LOGGER.error(e.getMessage(), e);
+            } catch (IllegalStateException e) {
+                LOGGER.error(e.getMessage(), e);
             }
         }
     }
