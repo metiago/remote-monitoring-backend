@@ -45,6 +45,7 @@ public class Monitor implements Runnable {
                 SocketAddress socketAddress = new InetSocketAddress(this.node.getHost(), this.node.getPort());
                 socket.connect(socketAddress);
                 this.node.setUp(true);
+
             } catch (Exception e) {
                 node.setUp(false);
             }
@@ -67,7 +68,7 @@ public class Monitor implements Runnable {
             try {
                 TimeUnit.SECONDS.sleep(MAX_INTERVAL_TIME_IN_SEC);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                LOGGER.error(e.getMessage(), e);
             }
         }
     }
