@@ -14,6 +14,8 @@ public class WebSocket implements Runnable {
 
     private static final transient Logger LOGGER = LoggerFactory.getLogger(WebSocket.class);
 
+    private volatile boolean running = true;
+
     private ServerWebSocket handler;
 
     public WebSocket(ServerWebSocket handler) {
@@ -25,7 +27,7 @@ public class WebSocket implements Runnable {
 
         MemoryDB db = MemoryDB.instance();
 
-        while (true) {
+        while (running) {
 
             try {
 
@@ -38,10 +40,10 @@ public class WebSocket implements Runnable {
                 }
 
                 TimeUnit.SECONDS.sleep(2);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException | IllegalStateException e) {
                 LOGGER.error(e.getMessage(), e);
-            } catch (IllegalStateException e) {
-                LOGGER.error(e.getMessage(), e);
+                // When web socket close its connection we stop this thread
+                running = false;
             }
         }
     }
