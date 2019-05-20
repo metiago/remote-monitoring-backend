@@ -1,9 +1,5 @@
 package io.tiago.monitor;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import io.tiago.monitor.domain.Constants;
 import io.tiago.monitor.domain.Message;
 import io.tiago.monitor.domain.Node;
@@ -31,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-// TODO check log for errors after long running
+
 public class Server extends AbstractVerticle {
 
     private static final transient Logger LOGGER = LoggerFactory.getLogger(Server.class);
@@ -76,12 +72,12 @@ public class Server extends AbstractVerticle {
             t.setDaemon(true);
             t.start();
             //handler.handler(data -> System.out.println("Received data " + data.toString("ISO-8859-1")));
+
         });
 
         server.requestHandler(router).listen(Constants.APP_PORT);
     }
 
-    // TODO change from constants to HttpHeaders
     private void export(RoutingContext routingContext) {
         LOGGER.info("Exporting nodes");
         MemoryDB db = MemoryDB.instance();
@@ -90,14 +86,14 @@ public class Server extends AbstractVerticle {
                 .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
                 .putHeader("Content-Disposition", "attachment; filename=\"nodes.txt\"")
                 .putHeader(HttpHeaders.TRANSFER_ENCODING, "chunked")
-                .sendFile("J1.txt").end(Json.encodePrettily(nodes));
+                .end(Json.encodePrettily(nodes));
     }
 
     private void getAll(RoutingContext routingContext) {
         LOGGER.info("Listing all registered services");
         MemoryDB db = MemoryDB.instance();
         List<Node> nodes = db.all();
-        routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(JsonHelper.encodePrettily(nodes));
+        routingContext.response().putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(JsonHelper.encodePrettily(nodes));
     }
 
     private void getOne(RoutingContext routingContext) {
@@ -105,9 +101,9 @@ public class Server extends AbstractVerticle {
         LOGGER.info("Getting node by key {}", key);
         Node node = MemoryDB.instance().one(key);
         if (node == null) {
-            routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(404).end(JsonHelper.encodePrettily(new Message(Constants.DATA_NOT_FOUND)));
+            routingContext.response().putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(404).end(JsonHelper.encodePrettily(new Message(Constants.DATA_NOT_FOUND)));
         }
-        routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(JsonHelper.encodePrettily(node));
+        routingContext.response().putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(JsonHelper.encodePrettily(node));
     }
 
     private void add(RoutingContext routingContext) {
@@ -115,28 +111,17 @@ public class Server extends AbstractVerticle {
         String body = routingContext.getBodyAsString();
 
         if ("".equals(body)) {
-            routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(new Message(Constants.BODY_NOT_EMPTY)));
+            routingContext.response().putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(new Message(Constants.BODY_NOT_EMPTY)));
             return;
         }
-
-        Node node;
 
         try {
-            // TODO Change it to helper
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.registerModule(new ParameterNamesModule()).registerModule(new Jdk8Module()).registerModule(new JavaTimeModule());
-            node = mapper.readValue(body, Node.class);
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
-            routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(new Message(Constants.MSG_BAD_REQUEST)));
-            return;
-        }
 
-        Map<String, String> validations = new Validator().validate(node);
+            Node node = (Node) JsonHelper.readValue(body, Node.class);
 
-        if (validations.size() == 0) {
+            Map<String, String> validations = new Validator().validate(node);
 
-            try {
+            if (validations.size() == 0) {
 
                 LOGGER.info("Adding node {}", node);
 
@@ -151,16 +136,18 @@ public class Server extends AbstractVerticle {
                     t.setDaemon(true);
                     t.start();
 
-                    routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(201).end(JsonHelper.encodePrettily(new Message(Constants.MSG_OK)));
+                    routingContext.response().putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(201).end(JsonHelper.encodePrettily(new Message(Constants.MSG_OK)));
                 } else {
-                    routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(new Message(Constants.TOO_MANY_NODES)));
+                    routingContext.response().putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(new Message(Constants.TOO_MANY_NODES)));
                 }
-            } catch (Exception e) {
-                LOGGER.error(e.getMessage(), e);
-                routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(500).end(JsonHelper.encodePrettily(new Message(e.getMessage())));
+
+            } else {
+                routingContext.response().putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(validations));
             }
-        } else {
-            routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(validations));
+
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+            routingContext.response().putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(400).end(JsonHelper.encodePrettily(new Message(Constants.MSG_BAD_REQUEST)));
         }
     }
 
@@ -169,9 +156,9 @@ public class Server extends AbstractVerticle {
         LOGGER.info("Deleting node by key {}", key);
         Node node = MemoryDB.instance().one(key);
         if (node == null) {
-            routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(404).end(JsonHelper.encodePrettily(new Message(Constants.DATA_NOT_FOUND)));
+            routingContext.response().putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(404).end(JsonHelper.encodePrettily(new Message(Constants.DATA_NOT_FOUND)));
         }
         MemoryDB.instance().remove(key);
-        routingContext.response().putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(204).end();
+        routingContext.response().putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(204).end();
     }
 }
