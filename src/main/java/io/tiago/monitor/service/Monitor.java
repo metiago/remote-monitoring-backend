@@ -33,8 +33,6 @@ public class Monitor implements Runnable {
 
         Duration sec = Duration.of(node.getExpire(), ChronoUnit.SECONDS);
 
-        LocalTime now = LocalTime.now();
-
         LocalTime expireAt = LocalTime.now().plus(sec);
 
         while (isInTimeRange(node)) {
@@ -58,13 +56,13 @@ public class Monitor implements Runnable {
                 node.setUp(false);
             }
 
-            if (now.isAfter(expireAt)) {
+            if (LocalTime.now().isAfter(expireAt)) {
                 break;
             }
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-        LOGGER.debug("Ended at {} with node\n {}", formatter.format(now), node);
+        LOGGER.debug("Ended at {} with node\n{}", formatter.format(LocalTime.now()), node);
     }
 
     private void waitExecution() {
