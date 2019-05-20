@@ -4,8 +4,6 @@ public class Constants {
 
     public static final int APP_PORT = 8001;
 
-    public static final String CONTENT_TYPE = "content-type";
-
     public static final String APPLICATION_TYPE = "application/json";
 
     public static final String MSG_OK = "Data has been saved successfully";
