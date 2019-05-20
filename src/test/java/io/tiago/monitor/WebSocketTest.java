@@ -4,6 +4,7 @@ import io.tiago.monitor.domain.Constants;
 import io.tiago.monitor.domain.Message;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.Json;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -50,7 +51,7 @@ public class WebSocketTest {
         Async async = context.async();
         Vertx vertx = Vertx.vertx();
         vertx.createHttpClient().post(8001, "localhost", "/")
-                .putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE)
+                .putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE)
                 .putHeader("content-length", length)
                 .handler(response -> {
 
@@ -90,7 +91,7 @@ public class WebSocketTest {
         Async async = context.async();
         Vertx vertx = Vertx.vertx();
         vertx.createHttpClient().post(8001, "localhost", "/")
-                .putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE)
+                .putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE)
                 .putHeader("content-length", length)
                 .handler(response -> {
                     context.assertEquals(response.statusCode(), 201);
@@ -122,7 +123,7 @@ public class WebSocketTest {
         Async async = context.async();
         Vertx vertx = Vertx.vertx();
         vertx.createHttpClient().post(8001, "localhost", "/")
-                .putHeader(Constants.CONTENT_TYPE, Constants.APPLICATION_TYPE)
+                .putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE)
                 .putHeader("content-length", length)
                 .handler(response -> {
                     context.assertEquals(response.statusCode(), 400);
