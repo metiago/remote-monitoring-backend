@@ -53,6 +53,7 @@ public class Monitor implements Runnable {
                 this.node.setUp(true);
 
             } catch (Exception e) {
+                LOGGER.debug(e.getMessage() + " {}:{} ", this.node.getHost(), this.node.getPort());
                 node.setUp(false);
             }
 
@@ -62,7 +63,7 @@ public class Monitor implements Runnable {
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-        LOGGER.debug("Ended at {} with node\n{}", formatter.format(LocalTime.now()), node);
+        LOGGER.debug("Ended at {} with node: {}", formatter.format(LocalTime.now()), node);
     }
 
     private void waitExecution() {
