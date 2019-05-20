@@ -34,12 +34,11 @@ public class WebSocket implements Runnable {
                 List<Node> data = db.all();
 
                 for (Node n : data) {
-                    TimeUnit.SECONDS.sleep(10);
+                    TimeUnit.SECONDS.sleep(n.getPollFrequency());
                     LOGGER.info("Sending status for: {}", n);
                     this.handler.write(Buffer.buffer(JsonHelper.encodePrettily(n)));
                 }
 
-                TimeUnit.SECONDS.sleep(2);
             } catch (InterruptedException | IllegalStateException e) {
                 LOGGER.error(e.getMessage(), e);
                 // When web socket close its connection we stop this thread
