@@ -17,6 +17,7 @@ public class Monitor implements Runnable {
 
     private static final transient Logger LOGGER = LoggerFactory.getLogger(Monitor.class);
 
+    // TODO Make it configurable
     private static final int MAX_INTERVAL_TIME_IN_SEC = 2;
 
     private Node node;
@@ -32,9 +33,16 @@ public class Monitor implements Runnable {
 
         Duration sec = Duration.of(node.getExpire(), ChronoUnit.SECONDS);
 
+        LocalTime now = LocalTime.now();
+
         LocalTime expireAt = LocalTime.now().plus(sec);
 
         while (isInTimeRange(node)) {
+
+            if(hasNoData()) {
+                LOGGER.debug("Exiting method run");
+                break;
+            }
 
             LOGGER.debug("Checking address {}:{}", this.node.getHost(), this.node.getPort());
 
@@ -50,18 +58,23 @@ public class Monitor implements Runnable {
                 node.setUp(false);
             }
 
-            LocalTime now = LocalTime.now();
             if (now.isAfter(expireAt)) {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-                LOGGER.debug("Ended at {} with node\n {}", formatter.format(now), node);
                 break;
             }
         }
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+        LOGGER.debug("Ended at {} with node\n {}", formatter.format(now), node);
     }
 
     private void waitExecution() {
 
         while (!isInTimeRange(this.node)) {
+
+            if(hasNoData()) {
+                LOGGER.debug("Exiting method wait execution");
+                break;
+            }
 
             LOGGER.debug("Waiting to check node: {}", this.node);
 
@@ -76,5 +89,10 @@ public class Monitor implements Runnable {
     private boolean isInTimeRange(Node node) {
         LocalTime now = LocalTime.now();
         return now.isAfter(node.getStart()) && now.isBefore(node.getEnd());
+    }
+
+    private boolean hasNoData() {
+        MemoryDB db = MemoryDB.instance();
+        return db.size() == 0;
     }
 }
