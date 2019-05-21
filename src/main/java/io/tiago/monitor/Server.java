@@ -76,7 +76,7 @@ public class Server extends AbstractVerticle {
 
         int port = Integer.parseInt(System.getenv("PORT"));
         LOGGER.info("Monitor running listen on port:" + port);
-        server.requestHandler(router).listen(port);
+        server.requestHandler(router).listen(port, "0.0.0.0");
     }
 
     private void export(RoutingContext routingContext) {
