@@ -167,7 +167,7 @@
                 <configuration>
                     <appName>zbx3</appName>
                     <processTypes>
-                        <web>java -jar zbx3-1.0.0-SNAPSHOT.jar</web>
+                        <web>java -jar target\zbx3-1.0.0-SNAPSHOT.jar</web>
                     </processTypes>
                 </configuration>
             </plugin>
