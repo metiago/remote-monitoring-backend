@@ -167,11 +167,11 @@
                 <configuration>
                     <includeTarget>false</includeTarget>
                     <includes>
-                        <include>target/my-app-1.0.jar</include>
+                        <include>target/zbx3-1.0.0-SNAPSHOT.jar</include>
                     </includes>
                     <appName>zbx3</appName>
                     <processTypes>
-                        <web>java -jar target\zbx3-1.0.0-SNAPSHOT.jar</web>
+                        <web>java -jar target/zbx3-1.0.0-SNAPSHOT.jar</web>
                     </processTypes>
                 </configuration>
             </plugin>
