@@ -17,13 +17,26 @@ import java.time.Duration;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RunWith(VertxUnitRunner.class)
 public class WebSocketTest {
 
+    private LocalTime start;
+    private LocalTime end;
+    private DateTimeFormatter formatter;
+    private String s;
+    private String e;
+
     @Before
     public void setUp() {
+
+        start = LocalTime.now().plus(Duration.ofSeconds(10));
+        end = LocalTime.now().plus(Duration.ofMinutes(1));
+        s = start.format(formatter);
+        e = end.format(formatter);
+
         Vertx vertx = Vertx.vertx();
         vertx.deployVerticle(new Server());
     }
@@ -31,17 +44,11 @@ public class WebSocketTest {
     @Test
     public void when_valid_request_then_web_socket_ok(TestContext context) {
 
-        LocalTime start = LocalTime.now().plus(Duration.ofSeconds(10));
-        LocalTime end = LocalTime.now().plus(Duration.ofMinutes(1));
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-        String s = start.format(formatter);
-        String e = end.format(formatter);
-
         Map<String, Object> body = new HashMap<>();
         body.put("pollFrequency", 2);
         body.put("start", s);
         body.put("end", e);
-        body.put("expire", 30);
+        body.put("expire", 3);
         body.put("host", "localhost");
         body.put("port", 8001);
 
@@ -79,9 +86,9 @@ public class WebSocketTest {
 
         Map<String, Object> body = new HashMap<>();
         body.put("pollFrequency", 2);
-        body.put("start", "21:00:00");
-        body.put("end", "21:02:00");
-        body.put("expire", 30);
+        body.put("start", "21:00");
+        body.put("end", "21:02");
+        body.put("expire", 3);
         body.put("host", "localhost");
         body.put("port", 8001);
 
@@ -135,6 +142,25 @@ public class WebSocketTest {
                     });
                 })
                 .write(json)
+                .end();
+    }
+
+    @Test
+    public void when_export_then_ok(TestContext context) {
+
+        Async async = context.async();
+        Vertx vertx = Vertx.vertx();
+        vertx.createHttpClient().get(8001, "localhost", "/export/")
+                .putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE)
+                .handler(response -> {
+                    context.assertEquals(response.statusCode(), 200);
+                    context.assertTrue(response.headers().get("content-type").contains("text/plain"));
+                    response.bodyHandler(resp -> {
+                        final List body = Json.decodeValue(resp, List.class);
+                        context.assertNotNull(body);
+                        async.complete();
+                    });
+                })
                 .end();
     }
 }
