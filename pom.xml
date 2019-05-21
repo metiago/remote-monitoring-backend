@@ -167,7 +167,7 @@
                 <configuration>
                     <appName>zbx3</appName>
                     <processTypes>
-                        <web>java $JAVA_OPTS -Dhttp.port=$PORT -jar target/heroku-example-${project.version}-fat.jar</web>
+                        <web>java $JAVA_OPTS -cp target/classes:target/dependency/* Main</web>
                     </processTypes>
                 </configuration>
             </plugin>
