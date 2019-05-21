@@ -1,0 +1,64 @@
+[ {
+  "key" : "981d54c153f14d18a71c364e5dfabb35",
+  "pollFrequency" : 5,
+  "start" : "10:00",
+  "end" : "23:00",
+  "expire" : 3,
+  "host" : "google.com",
+  "port" : 80,
+  "up" : false
+}, {
+  "key" : "bc792fa4aeed4e9a9edf168b13458638",
+  "pollFrequency" : 20,
+  "start" : "01:00",
+  "end" : "23:00",
+  "expire" : 3,
+  "host" : "localhost",
+  "port" : 5432,
+  "up" : false
+}, {
+  "key" : "619b5d18af0245f9898fecde3b9c9350",
+  "pollFrequency" : 10,
+  "start" : "01:00",
+  "end" : "23:00",
+  "expire" : 3,
+  "host" : "yahoo.com",
+  "port" : 80,
+  "up" : false
+}, {
+  "key" : "39dff2fb2d2e46d881d3997e28ddd6c9",
+  "pollFrequency" : 10,
+  "start" : "01:00",
+  "end" : "23:00",
+  "expire" : 3,
+  "host" : "developer.mercedes-benz.com",
+  "port" : 80,
+  "up" : false
+}, {
+  "key" : "ce1bbd68575c4dd1a289b89ac77eb350",
+  "pollFrequency" : 10,
+  "start" : "10:00",
+  "end" : "23:00",
+  "expire" : 3,
+  "host" : "stackoverflow.com",
+  "port" : 80,
+  "up" : false
+}, {
+  "key" : "29b71dff875a47dfa42fcedfaaaabb81",
+  "pollFrequency" : 10,
+  "start" : "01:30",
+  "end" : "23:30",
+  "expire" : 3,
+  "host" : "github.com",
+  "port" : 80,
+  "up" : false
+}, {
+  "key" : "d5bb0d22c9cd47809f826bced87c5bf4",
+  "pollFrequency" : 10,
+  "start" : "22:30",
+  "end" : "23:00",
+  "expire" : 3,
+  "host" : "localhost",
+  "port" : 5000,
+  "up" : false
+} ]
