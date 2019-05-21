@@ -35,7 +35,6 @@ public class Server extends AbstractVerticle {
     public static void main(String[] args) {
         Vertx vertx = Vertx.vertx();
         vertx.deployVerticle(new Server());
-        LOGGER.info("Monitor running listen on port:" + Constants.APP_PORT);
     }
 
     @Override
@@ -75,7 +74,9 @@ public class Server extends AbstractVerticle {
 
         });
 
-        server.requestHandler(router).listen(Constants.APP_PORT);
+        int port = Integer.parseInt(System.getenv("PORT"));
+        LOGGER.info("Monitor running listen on port:" + port);
+        server.requestHandler(router).listen(port);
     }
 
     private void export(RoutingContext routingContext) {

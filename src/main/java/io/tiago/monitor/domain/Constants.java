@@ -2,8 +2,6 @@ package io.tiago.monitor.domain;
 
 public class Constants {
 
-    public static final int APP_PORT = 80;
-
     public static final String APPLICATION_TYPE = "application/json";
 
     public static final String MSG_OK = "Data has been saved successfully";
