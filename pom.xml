@@ -167,7 +167,7 @@
                 <configuration>
                     <appName>zbx3</appName>
                     <processTypes>
-                        <web>java $JAVA_OPTS -cp target/classes:target/dependency/* Main</web>
+                        <web>java -jar zbx3-1.0.0-SNAPSHOT.jar</web>
                     </processTypes>
                 </configuration>
             </plugin>
