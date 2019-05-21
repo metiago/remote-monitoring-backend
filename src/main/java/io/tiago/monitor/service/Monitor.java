@@ -42,7 +42,7 @@ public class Monitor implements Runnable {
                 break;
             }
 
-            LOGGER.debug("Checking address {}:{}", this.node.getHost(), this.node.getPort());
+            LOGGER.info("Checking address {}:{}", this.node.getHost(), this.node.getPort());
 
             try (Socket socket = new Socket()) {
 
@@ -63,7 +63,7 @@ public class Monitor implements Runnable {
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-        LOGGER.debug("Ended at {} with node: {}", formatter.format(LocalTime.now()), node);
+        LOGGER.info("Ended at {} with node: {}", formatter.format(LocalTime.now()), node);
     }
 
     private void waitExecution() {
