@@ -165,6 +165,10 @@
                 <artifactId>heroku-maven-plugin</artifactId>
                 <version>2.0.8</version>
                 <configuration>
+                    <includeTarget>false</includeTarget>
+                    <includes>
+                        <include>target/my-app-1.0.jar</include>
+                    </includes>
                     <appName>zbx3</appName>
                     <processTypes>
                         <web>java -jar target\zbx3-1.0.0-SNAPSHOT.jar</web>
