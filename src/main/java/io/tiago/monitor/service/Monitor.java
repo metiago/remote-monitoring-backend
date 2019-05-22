@@ -27,7 +27,11 @@ public class Monitor implements Runnable {
 
     public Monitor(Node node) {
         this.node = node;
-        this.zoneId = ZoneId.of(node.getTimeZone());
+        if(node.getTimeZone() == null) {
+            this.zoneId = ZoneId.of(ZoneId.systemDefault().toString());
+        } else {
+            this.zoneId = ZoneId.of(node.getTimeZone());
+        }
     }
 
     @Override
