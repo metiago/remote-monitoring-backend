@@ -36,7 +36,6 @@ public class WebSocketTest {
         end = LocalTime.now().plus(Duration.ofMinutes(1));
         s = start.format(formatter);
         e = end.format(formatter);
-
         Vertx vertx = Vertx.vertx();
         vertx.deployVerticle(new Server());
     }
