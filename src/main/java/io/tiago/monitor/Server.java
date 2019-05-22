@@ -22,6 +22,8 @@ import io.vertx.ext.web.handler.StaticHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +60,7 @@ public class Server extends AbstractVerticle {
         router.route().handler(CorsHandler.create("*").allowedHeaders(allowedHeaders).allowedMethods(allowedMethods));
 
         router.get("/").handler(this::getAll);
+        router.get("/timezones").handler(this::getTimeZones);
         router.get("/:key").handler(this::getOne);
         router.get("/export").handler(this::export);
         router.post("/").handler(this::add);
@@ -74,9 +77,16 @@ public class Server extends AbstractVerticle {
 
         });
 
-        int port = Integer.parseInt(System.getenv("PORT"));
+        String varPort = System.getenv("PORT");
+        int port = varPort == null ? 8001 : Integer.parseInt(varPort);
         LOGGER.info("Monitor running listen on port:" + port);
         server.requestHandler(router).listen(port, "0.0.0.0");
+    }
+
+    private void getTimeZones(RoutingContext routingContext) {
+
+        Set<String> zoneIds = ZoneId.getAvailableZoneIds();
+        routingContext.response().putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(JsonHelper.encodePrettily(zoneIds));
     }
 
     private void export(RoutingContext routingContext) {

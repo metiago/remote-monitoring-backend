@@ -31,7 +31,7 @@ public class WebSocketTest {
 
     @Before
     public void setUp() {
-
+        this.formatter = formatter.ofPattern("HH:mm");
         start = LocalTime.now().plus(Duration.ofSeconds(10));
         end = LocalTime.now().plus(Duration.ofMinutes(1));
         s = start.format(formatter);

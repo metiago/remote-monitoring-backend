@@ -9,6 +9,7 @@ import java.net.Socket;
 import java.net.SocketAddress;
 import java.time.Duration;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
@@ -22,8 +23,11 @@ public class Monitor implements Runnable {
 
     private Node node;
 
+    private ZoneId zoneId;
+
     public Monitor(Node node) {
         this.node = node;
+        this.zoneId = ZoneId.of(node.getTimeZone());
     }
 
     @Override
@@ -33,7 +37,7 @@ public class Monitor implements Runnable {
 
         Duration sec = Duration.of(node.getExpire(), ChronoUnit.SECONDS);
 
-        LocalTime expireAt = LocalTime.now().plus(sec);
+        LocalTime expireAt = LocalTime.now(this.zoneId).plus(sec);
 
         while (isInTimeRange(node)) {
 
@@ -57,13 +61,13 @@ public class Monitor implements Runnable {
                 node.setUp(false);
             }
 
-            if (LocalTime.now().isAfter(expireAt)) {
+            if (LocalTime.now(this.zoneId).isAfter(expireAt)) {
                 break;
             }
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-        LOGGER.info("Ended at {} with node: {}", formatter.format(LocalTime.now()), node);
+        LOGGER.info("Ended at {} with node: {}", formatter.format(LocalTime.now(this.zoneId)), node);
     }
 
     private void waitExecution() {
@@ -86,7 +90,7 @@ public class Monitor implements Runnable {
     }
 
     private boolean isInTimeRange(Node node) {
-        LocalTime now = LocalTime.now();
+        LocalTime now = LocalTime.now(this.zoneId);
         return now.isAfter(node.getStart()) && now.isBefore(node.getEnd());
     }
 

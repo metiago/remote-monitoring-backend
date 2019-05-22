@@ -10,6 +10,8 @@ public class Node implements Serializable {
 
     private String key;
 
+    private String timeZone;
+
     private int pollFrequency;
 
     @JsonFormat(pattern = "HH:mm")
@@ -35,6 +37,14 @@ public class Node implements Serializable {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public String getTimeZone() {
+        return timeZone;
+    }
+
+    public void setTimeZone(String timeZone) {
+        this.timeZone = timeZone;
     }
 
     public int getPollFrequency() {
