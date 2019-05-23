@@ -18,8 +18,7 @@ public class Monitor implements Runnable {
 
     private static final transient Logger LOGGER = LoggerFactory.getLogger(Monitor.class);
 
-    // TODO Make it configurable
-    private static final int MAX_INTERVAL_TIME_IN_SEC = 2;
+    private static final int MAX_INTERVAL_TIME_IN_SEC = 500;
 
     private Node node;
 
@@ -86,7 +85,7 @@ public class Monitor implements Runnable {
             LOGGER.info("Waiting to check node: {}", this.node);
 
             try {
-                TimeUnit.SECONDS.sleep(MAX_INTERVAL_TIME_IN_SEC);
+                TimeUnit.MILLISECONDS.sleep(MAX_INTERVAL_TIME_IN_SEC);
             } catch (InterruptedException e) {
                 LOGGER.error(e.getMessage(), e);
             }
