@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-// TODO Testing delete all nodes and add again
+
 public class Server extends AbstractVerticle {
 
     private static final transient Logger LOGGER = LoggerFactory.getLogger(Server.class);
