@@ -61,7 +61,7 @@ public class Monitor implements Runnable {
                 this.node.setUp(true);
 
             } catch (Exception e) {
-                LOGGER.debug(e.getMessage() + " {}:{} ", this.node.getHost(), this.node.getPort());
+                LOGGER.error(e.getMessage() + " {}:{} ", this.node.getHost(), this.node.getPort());
                 node.setUp(false);
             }
 
@@ -83,7 +83,7 @@ public class Monitor implements Runnable {
                 break;
             }
 
-            LOGGER.debug("Waiting to check node: {}", this.node);
+            LOGGER.info("Waiting to check node: {}", this.node);
 
             try {
                 TimeUnit.SECONDS.sleep(MAX_INTERVAL_TIME_IN_SEC);
