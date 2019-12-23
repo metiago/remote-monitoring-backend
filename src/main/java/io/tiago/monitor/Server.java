@@ -61,7 +61,7 @@ public class Server extends AbstractVerticle {
         router.get("/").handler(this::getAll);
         router.get("/timezones").handler(this::getTimeZones);
         router.get("/:key").handler(this::getOne);
-        router.get("/download").handler(this::download);
+        router.get("/export/download").handler(this::download);
         router.post("/").handler(this::add);
         router.delete("/:key").handler(this::delete);
 
