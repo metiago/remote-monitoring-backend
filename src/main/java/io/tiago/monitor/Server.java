@@ -61,7 +61,7 @@ public class Server extends AbstractVerticle {
         router.get("/").handler(this::getAll);
         router.get("/timezones").handler(this::getTimeZones);
         router.get("/:key").handler(this::getOne);
-        router.get("/export").handler(this::export);
+        router.get("/download").handler(this::download);
         router.post("/").handler(this::add);
         router.delete("/:key").handler(this::delete);
 
@@ -88,7 +88,7 @@ public class Server extends AbstractVerticle {
         routingContext.response().putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(JsonHelper.encodePrettily(zoneIds));
     }
 
-    private void export(RoutingContext routingContext) {
+    private void download(RoutingContext routingContext) {
         LOGGER.info("Exporting nodes");
         MemoryDB db = MemoryDB.instance();
         List<Node> nodes = db.all();
