@@ -92,11 +92,16 @@ public class Server extends AbstractVerticle {
         LOGGER.info("Exporting nodes");
         MemoryDB db = MemoryDB.instance();
         List<Node> nodes = db.all();
-        routingContext.response()
+        if (nodes.isEmpty()) {
+            routingContext.response().setStatusCode(404).end();
+        }
+        LOGGER.info("Sending http file.");
+        routingContext.response().setStatusCode(200)
                 .putHeader(HttpHeaders.CONTENT_TYPE, "text/plain")
                 .putHeader("Content-Disposition", "attachment; filename=\"nodes.txt\"")
                 .putHeader(HttpHeaders.TRANSFER_ENCODING, "chunked")
                 .end(Json.encodePrettily(nodes));
+                
     }
 
     private void getAll(RoutingContext routingContext) {
