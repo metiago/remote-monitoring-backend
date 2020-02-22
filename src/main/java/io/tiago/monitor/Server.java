@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 public class Server extends AbstractVerticle {
@@ -59,7 +60,7 @@ public class Server extends AbstractVerticle {
         router.route().handler(CorsHandler.create("*").allowedHeaders(allowedHeaders).allowedMethods(allowedMethods));
 
         router.get("/").handler(this::getAll);
-        router.get("/timezones").handler(this::getTimeZones);
+        router.get("/timezones/:timezone").handler(this::getTimeZones);
         router.get("/:key").handler(this::getOne);
         router.get("/export/download").handler(this::download);
         router.post("/").handler(this::add);
@@ -83,9 +84,12 @@ public class Server extends AbstractVerticle {
     }
 
     private void getTimeZones(RoutingContext routingContext) {
-
+        String param = routingContext.request().getParam("timezone");
+        String key = param.toLowerCase();
         Set<String> zoneIds = ZoneId.getAvailableZoneIds();
-        routingContext.response().putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(JsonHelper.encodePrettily(zoneIds));
+        zoneIds.stream().sorted().forEach(e -> System.out.println(e));
+        Set<String> result = zoneIds.stream().sorted().filter(f -> f.toLowerCase().contains(key)).collect(Collectors.toSet());
+        routingContext.response().putHeader(HttpHeaders.CONTENT_TYPE, Constants.APPLICATION_TYPE).setStatusCode(200).end(JsonHelper.encodePrettily(result));
     }
 
     private void download(RoutingContext routingContext) {
